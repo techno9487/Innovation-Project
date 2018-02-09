@@ -20,6 +20,11 @@ char packet_buffer[1024];
  */
 struct PacketHeartbeat: public Packet
 {
+    /**
+     * Token to be echoed back by the base station
+     */
+    int token = 255;
+
     PacketType GetType()
     {
         return PACKET_HEARTBEAT;
@@ -27,18 +32,19 @@ struct PacketHeartbeat: public Packet
     
     void Transmit(PacketStream &stream)
     {
-        //TODO: add code to transmit heartbeat message
+        stream.WriteInt(token);
     }
     
     void Receive(PacketStream &stream)
     {
-        //TODO: add code to decode packet
+        stream.ReadInt(&token);
     }
 };
 
 int main()
 {
     PacketStream stream(packet_buffer,1024);
+
     return 0;
 }
 
