@@ -3,13 +3,13 @@
  
  Author: Toby Dunn
  Project: BCU Innocation Fest 2018
+
+ Endianess is assumed to be Little unless otherwise stated
  */
 
-/**
- * The max size of a packet can only be 1024 bytes, this is to make sure
- * that no dynamic memory has to be allocated.
- */
-char packet_buffer[1024];
+#pragma once
+#include <stdlib.h>
+#include <string.h>
 
 /**
  List of packet ID's
@@ -45,10 +45,11 @@ struct PacketStream
      * @param buffer [in] pointer to the buffer for the stream to use
      * @param size [in] max size of the buffer to use 
      * */
-    public PacketStream(char* buffer,size_t size)
+    PacketStream(char* buffer,size_t size)
     {
         this->buffer = buffer;
         this->buffer_size = size;
+        this->Reset();
     }
 
     /**
@@ -63,8 +64,32 @@ struct PacketStream
      * Writes an integer into the stream
      * @param [in] value, the value to write into the stream
      */
-    void WriteInt(int value);
-    int ReadInt();
+    void WriteInt(int value)
+    {
+        //make sure theres room left, avoids a buffer overflow exploit
+        if(index+sizeof(int) > buffer_size-1)
+        {
+            return;
+        }
+
+        memcpy(buffer+index,&value,sizeof(int));
+        index += sizeof(int);
+    }
+
+    /**
+     * Reads an int from the stream
+     * @param [in] value, a pointer to an int to assign this value too
+     */ 
+    void ReadInt(int* value)
+    {
+        if(index+sizeof(int) > buffer_size-1)
+        {
+            *value = 0;
+            return;
+        }
+
+        memcpy(value,buffer+index,sizeof(int));
+    }
 };
 
 /*
