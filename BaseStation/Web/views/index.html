@@ -12,11 +12,12 @@
         
         <div class='container'>
                 <h1>Smarthome</h1>
-                <div class='card'>
-                    <div class='card-body'>
-                        <h5 class='card-title'>Device:</h5>
-                    </div>
-                </div>
+
+                {{range .names}}
+
+                <h5>{{.}}</h5>
+            
+                {{end}}
         </div>
         
 
