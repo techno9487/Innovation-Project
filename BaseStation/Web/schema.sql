@@ -1,19 +1,21 @@
-CREATE TABLE 'Room' (
-    id int NOT NULL primary key AUTO_INCREMENT,
-    name VARCHAR(255)
+CREATE TABLE Room (
+    Id int NOT NULL primary key AUTO_INCREMENT,
+    RoomName VARCHAR(255)
 );
 
-CREATE TABLE 'Devices' (
-    id int NOT NULL primary key AUTO_INCREMENT,
-    name varchar(255),
-    key BLOB,
-    metadata BLOB,
-    FOREIGN KEY (room_id) REFERENCES Room(id)
+CREATE TABLE Device (
+    Id int NOT NULL primary key AUTO_INCREMENT,
+    DeviceName varchar(255),
+    DeviceKey BLOB,
+    DeviceMeta BLOB,
+    RoomId int,
+    FOREIGN KEY (RoomId) REFERENCES Room(Id)
 );
 
-CREATE TABLE 'Logs' (
-    id int NOT NULL primary key AUTO_INCREMENT,
-    FOREIGN KEY (device_id) REFERENCES Devices(id),
-    data TEXT,
-    timestamp DATETIME
+CREATE TABLE Log (
+    Id int NOT NULL primary key AUTO_INCREMENT,
+    LogData TEXT,
+    LogStamp DATETIME,
+    DeviceId int,
+    FOREIGN KEY (DeviceId) REFERENCES Devices(Id)
 );
