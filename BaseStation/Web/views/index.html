@@ -1,25 +1,15 @@
-<html>
-    <head>
-        <title>
-            Smarthome Innovation Project
-        </title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    </head>
-    <body>
-        <nav class='nav'>
+{{define "content"}}
+<nav class='nav'>
 
-        </nav>
-        
-        <div class='container'>
-                <h1>Smarthome</h1>
+</nav>
 
-                {{range .names}}
+<div class='container'>
+        <h1>Smarthome</h1>
 
-                <h5>{{.}}</h5>
-            
-                {{end}}
-        </div>
-        
+        {{range .names}}
 
-    </body>
-</html>
+        <h5>{{.}}</h5>
+    
+        {{end}}
+</div>
+{{end}}

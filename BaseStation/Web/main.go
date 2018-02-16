@@ -37,7 +37,7 @@ func initDB() {
 }
 
 func homeHandler(res http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("views/index.html")
+	t, err := template.ParseFiles("views/base.html", "views/index.html")
 	if err != nil {
 		log.Println(err)
 	}
