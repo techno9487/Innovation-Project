@@ -32,5 +32,6 @@ CREATE TABLE User (
     LastName VARCHAR(255),
     Password VARCHAR(255),
     Email VARCHAR(255),
-    Permissions TEXT
+    Permissions TEXT,
+    UserMetadata BLOB
 )

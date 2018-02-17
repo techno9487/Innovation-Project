@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/justinas/alice"
+
 	_ "github.com/go-sql-driver/mysql"
 
 	"html/template"
@@ -22,6 +24,10 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", homeHandler)
+	router.HandleFunc("/login", handleLogin)
+
+	chain := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware).ThenFunc(handleDashboard)
+	router.Handle("/dashboard", chain)
 
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
@@ -42,8 +48,5 @@ func homeHandler(res http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	data := map[string]interface{}{}
-	data["names"] = fetchRooms()
-
-	t.Execute(res, data)
+	t.Execute(res, nil)
 }

@@ -1,15 +1,25 @@
 {{define "content"}}
-<nav class='nav'>
+<div class="container">
+        <div class='row'>
+                <div class='col'>
 
-</nav>
-
-<div class='container'>
-        <h1>Smarthome</h1>
-
-        {{range .names}}
-
-        <h5>{{.}}</h5>
-    
-        {{end}}
+                </div>
+                <div class='col'>
+                        <form action='/login' method="POST">
+                                <div class='form-group'>
+                                        <label for='emailEntry'>Email</label>
+                                        <input type='text' class='form-control' name='email' />
+                                </div>
+                                <div class="form-group">
+                                        <label for='passwordEntry'>Password</label>
+                                        <input type='password' class="form-control" name='password' />
+                                </div>
+                                <input type='submit' class='btn btn-primary' value='Login' style='float: right;'/>
+                        </form>           
+                </div>
+                <div class='col'>
+                        
+                </div>
+        </div>   
 </div>
 {{end}}
