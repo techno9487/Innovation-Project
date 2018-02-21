@@ -26,8 +26,11 @@ func main() {
 	router.HandleFunc("/", homeHandler)
 	router.HandleFunc("/login", handleLogin)
 
-	chain := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware).ThenFunc(handleDashboard)
+	chain := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware, changePasswordMiddleware).ThenFunc(handleDashboard)
 	router.Handle("/dashboard", chain)
+
+	passwordChain := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware).ThenFunc(handlePasswordChange)
+	router.Handle("/passwordChange", passwordChain).Methods("GET")
 
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
