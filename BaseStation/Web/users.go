@@ -25,9 +25,10 @@ func changePasswordMiddleware(next http.Handler) http.Handler {
 
 		row.Scan(&data)
 
-		log.Println(data)
-
-		//TODO: check if data is empty string
+		if len(data) == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		storage := map[string]interface{}{}
 
@@ -38,6 +39,7 @@ func changePasswordMiddleware(next http.Handler) http.Handler {
 
 		if storage["passwordChange"] == true {
 			http.Redirect(w, r, "/passwordChange", 301)
+			return
 		}
 
 		next.ServeHTTP(w, r)
@@ -81,7 +83,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(r.FormValue("password")))
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		w.Write([]byte("Wrong username or password"))
 		return
 	}
@@ -104,9 +106,71 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePasswordChange(w http.ResponseWriter, r *http.Request) {
+
 	tmp, err := template.ParseFiles("views/base.html", "views/passwordChange.html")
 	if err != nil {
 		log.Println(err)
 	}
 	tmp.Execute(w, nil)
+}
+
+func handlePasswordChangeBackend(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	tmp, err := template.ParseFiles("views/base.html", "views/passwordChange.html")
+	if err != nil {
+		log.Println(err)
+	}
+
+	//Is either of the password fields blank
+	if len(r.FormValue("newPassword1")) < 1 {
+		tmp.Execute(w, map[string]interface{}{
+			"failureMessage": "Blank password",
+		})
+		return
+	}
+
+	//checks if the password fields match
+	if r.FormValue("newPassword1") != r.FormValue("newPassword2") {
+
+		tmp.Execute(w, map[string]interface{}{
+			"failureMessage": "Passwords don't match",
+		})
+		return
+	}
+
+	//check if the old password matches
+	sesh := r.Context().Value(SESSION_STORAGE_KEY).(Session)
+	row := globalDB.QueryRow("select (Password) from User where Id = ?", sesh.storage["uid"])
+	var pwd string
+
+	err = row.Scan(&pwd)
+	if err != nil {
+		log.Println("Password Change Err:", err)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(pwd), []byte(r.FormValue("oldPassword")))
+	if err != nil {
+		tmp.Execute(w, map[string]interface{}{
+			"failureMessage": "old password doesn't match",
+		})
+		return
+	}
+
+	data, err := bcrypt.GenerateFromPassword([]byte(r.FormValue("newPassword1")), bcrypt.DefaultCost)
+	if err != nil {
+		tmp.Execute(w, map[string]interface{}{
+			"failureMessage": err.Error(),
+		})
+		return
+	}
+
+	result, err := globalDB.Exec("update User set Password = ? where Id = ?", data, sesh.storage["uid"])
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(result.RowsAffected())
+
+	http.Redirect(w, r, "/dashboard", 301)
 }

@@ -31,6 +31,8 @@ func main() {
 
 	passwordChain := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware).ThenFunc(handlePasswordChange)
 	router.Handle("/passwordChange", passwordChain).Methods("GET")
+	passwordChainBackend := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware).ThenFunc(handlePasswordChangeBackend)
+	router.Handle("/passwordChange", passwordChainBackend).Methods("POST")
 
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
