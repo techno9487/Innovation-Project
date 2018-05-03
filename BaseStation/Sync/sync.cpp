@@ -1,8 +1,11 @@
-#include <stdio.h>
-#include <string.h>
+#include <iostream>
+#include <string>
 #include <openssl/rand.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
+#include "json.hh"
+
+using json = nlohmann::json;
 
 /*
     Author: Toby Dunn
@@ -44,7 +47,20 @@ int main()
         return -1;
     }
 
-    printf("%s\n",encoded_key);
+    json j;
+    std::string str((char*)encoded_key);
+    j["key"] = str;
+
+    if(!EncodeKey(data.iv,encoded_key,25))
+    {
+        printf("Failed to encode iv\n");
+        return -1;
+    }
+
+    str.assign((char*)encoded_key);
+    j["iv"] = str;
+
+    std::cout << j.dump() << std::endl;
 
     return 0;
 }

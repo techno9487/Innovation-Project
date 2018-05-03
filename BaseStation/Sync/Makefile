@@ -4,5 +4,5 @@ LIBS := -lcrypto
 SOURCES := sync.cpp
 
 all:
-	g++ $(SOURCES) $(INC) $(LIB_DIR) $(LIBS) -o Sync
+	g++ $(SOURCES) $(INC) $(LIB_DIR) $(LIBS) -std=c++11 -o Sync
 	
