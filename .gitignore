@@ -1,2 +1,3 @@
 build/
 BaseStation/Web/Web.exe
+*.o

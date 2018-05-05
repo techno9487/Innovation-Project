@@ -2,6 +2,8 @@
 #include <string>
 #include "json.hh"
 #include "crypto.hpp"
+#include <cppconn/driver.h>
+#include <cppconn/connection.h>
 
 using json = nlohmann::json;
 
@@ -13,6 +15,28 @@ using json = nlohmann::json;
 */
 int main()
 {
+    sql::Driver *driver;
+    sql::Connection *con;
+
+    //get sql driver instance
+    driver = get_driver_instance();
+    if(driver == NULL)
+    {
+        printf("Failed to create driver instance\n");
+        return -1;
+    }
+
+    //now try to connect
+    con = driver->connect("127.0.0.1","root","password");
+    if(con == nullptr)
+    {
+        printf("Failed to connect to the database\n");
+        return -1;
+    }
+
+    //set the database we're working with
+    con->setSchema("project");
+
     KeyData_t data;
     if(!GenerateKey(&data))
     {
