@@ -23,7 +23,7 @@ int GenerateKey(KeyData_t* data)
     return 1;
 }
 
-int EncodeKey(unsigned char* key,unsigned char* encoded,int output_length)
+int EncodeKey(unsigned char* key,char* encoded,int output_length)
 {
     BIO* b64 = BIO_new(BIO_f_base64());
     BIO* output = BIO_new(BIO_s_mem());

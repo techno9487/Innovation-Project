@@ -2,8 +2,7 @@
 #include <string>
 #include "json.hh"
 #include "crypto.hpp"
-#include <cppconn/driver.h>
-#include <cppconn/connection.h>
+#include "data.hpp"
 
 using json = nlohmann::json;
 
@@ -13,29 +12,15 @@ using json = nlohmann::json;
     Entry point for the device and base station sync process
     here wireless informtion and encryption keys are exchanged
 */
+
 int main()
 {
-    sql::Driver *driver;
-    sql::Connection *con;
-
-    //get sql driver instance
-    driver = get_driver_instance();
-    if(driver == NULL)
+    DataStorage* storage = DataStorage::getSingleton();
+    if(!storage->init())
     {
-        printf("Failed to create driver instance\n");
+        printf("Failed to connect to database\n");
         return -1;
     }
-
-    //now try to connect
-    con = driver->connect("127.0.0.1","root","password");
-    if(con == nullptr)
-    {
-        printf("Failed to connect to the database\n");
-        return -1;
-    }
-
-    //set the database we're working with
-    con->setSchema("project");
 
     KeyData_t data;
     if(!GenerateKey(&data))
@@ -44,7 +29,9 @@ int main()
         return 1;
     }
 
-    unsigned char encoded_key[25] = {};
+    char encoded_key[25] = {};
+    char encoded_iv[25] = {}; 
+
     if(!EncodeKey(data.key,encoded_key,25))
     {
         printf("Failed to encode key\n");
@@ -55,16 +42,27 @@ int main()
     std::string str((char*)encoded_key);
     j["key"] = str;
 
-    if(!EncodeKey(data.iv,encoded_key,25))
+    if(!EncodeKey(data.iv,encoded_iv,25))
     {
         printf("Failed to encode iv\n");
         return -1;
     }
 
-    str.assign((char*)encoded_key);
+    str.assign((char*)encoded_iv);
     j["iv"] = str;
 
+
+    if(!storage->insertDevice(encoded_key,encoded_iv))
+    {
+        printf("Failed to insert into database \n");
+        return -1;
+    }
+
+    j["id"] = storage->getLastInsertID();
+
     std::cout << j.dump() << std::endl;
+
+    delete storage;
 
     return 0;
 }

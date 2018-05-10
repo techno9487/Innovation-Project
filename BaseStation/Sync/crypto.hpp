@@ -20,4 +20,4 @@ struct KeyData_t
 int GenerateKey(KeyData_t* data);
 
 //Encodes the given key to base64
-int EncodeKey(unsigned char* key,unsigned char* output,int output_length);
+int EncodeKey(unsigned char* key,char* output,int output_length);

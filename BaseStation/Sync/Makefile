@@ -1,7 +1,7 @@
 INC := -I/usr/local/Cellar/OpenSSL/1.0.2o_1/include -I/usr/local/Cellar/mysql-connector-c++/1.1.9_1/include
 LIB_DIR := -L/usr/local/Cellar/OpenSSL/1.0.2o_1/lib -L/usr/local/Cellar/mysql-connector-c++/1.1.9_1/lib
 LIBS := -lcrypto -lmysqlcppconn
-SOURCES := sync.cpp crypto.cpp
+SOURCES := sync.cpp crypto.cpp data.cpp
 OBJECTS := $(SOURCES:.cpp=.o)
 
 Sync: $(OBJECTS)
