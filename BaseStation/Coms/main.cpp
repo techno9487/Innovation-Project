@@ -5,6 +5,8 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#include "link.hpp"
 
 /*
 Author: Toby Dunn
@@ -44,17 +46,42 @@ void externalSocketThread()
     sockaddr_in address = {};
     address.sin_family = AF_INET;
     address.sin_port = htons(1025);
-    address.sin_addr.s_addr = inet_addr("192.168.0.1");
+    address.sin_addr.s_addr = inet_addr("0.0.0.0");
 
-    bind(externalSock,(sockaddr*)&address,sizeof(address));
+    if(bind(externalSock,(sockaddr*)&address,sizeof(address)) < 0)
+    {
+        std::cout << "Can't bond to socket" << std::endl;
+        return;
+    }
 
-    while(true)
+    listen(externalSock,10);
+
+    bool isRunning = true;
+
+    while(isRunning)
     {
         //TODO: Accept external requests from the devices themselves
         //then spawn a new thread to handle that connection
 
         sockaddr_in client_addr = {};
         socklen_t size = sizeof(client_addr);
-        int fd = accept(fd,(sockaddr*)&client_addr,&size);
+        int fd = accept(externalSock,(sockaddr*)&client_addr,&size);
+
+        //check if actual connection
+        if(fd != -1)
+        {
+            char ip_buffer[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &(client_addr.sin_addr), ip_buffer, INET_ADDRSTRLEN);
+            printf("Connection from %d %s\n",fd,ip_buffer);
+
+            DeviceLink* link = new DeviceLink(fd,&client_addr,size);
+            std::thread link_thread(&DeviceLink::run,link);
+            link_thread.join();
+            
+            //TODO: possibly handle threads
+        }else if(errno != EBADF)
+        {
+            printf("Error: %d\n",errno);
+        }
     }
 }
