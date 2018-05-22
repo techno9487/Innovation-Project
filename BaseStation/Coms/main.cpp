@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include "link.hpp"
+#include <vector>
 
 /*
 Author: Toby Dunn
@@ -15,6 +16,7 @@ This program facilitates communication bettween the web process
 and the smart devices in the home.    
 */
 
+//Function containg the thread for accepting external sockets
 void externalSocketThread();
 
 int main()
@@ -39,6 +41,9 @@ int main()
     return 0;
 }
 
+//Contains all currently executign external threads
+std::vector<DeviceThread*> externalThreads;
+
 void externalSocketThread()
 {
     int externalSock = socket(AF_INET,SOCK_STREAM,0);
@@ -60,9 +65,6 @@ void externalSocketThread()
 
     while(isRunning)
     {
-        //TODO: Accept external requests from the devices themselves
-        //then spawn a new thread to handle that connection
-
         sockaddr_in client_addr = {};
         socklen_t size = sizeof(client_addr);
         int fd = accept(externalSock,(sockaddr*)&client_addr,&size);
@@ -75,13 +77,26 @@ void externalSocketThread()
             printf("Connection from %d %s\n",fd,ip_buffer);
 
             DeviceLink* link = new DeviceLink(fd,&client_addr,size);
-            std::thread link_thread(&DeviceLink::run,link);
-            link_thread.join();
+            DeviceThread* thread = new DeviceThread;
+            thread->link = link;
+            thread->thread = std::thread(&DeviceLink::run,link);
+
+            externalThreads.push_back(thread);
             
             //TODO: possibly handle threads
         }else if(errno != EBADF)
         {
             printf("Error: %d\n",errno);
         }
+    }
+
+    //TODO: Clean up all curently runnign connection threads
+    std::vector<DeviceThread*>::iterator it;
+    for(it = externalThreads.begin(); it<externalThreads.end();it++)
+    {
+        DeviceThread* thread = (*it);
+        thread->thread.join();
+        delete thread->link;
+        delete thread;
     }
 }
