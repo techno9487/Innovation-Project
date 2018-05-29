@@ -11,11 +11,13 @@
 #include <cppconn/driver.h>
 #include <cppconn/connection.h>
 
+struct DeviceThread;
+
 class DeviceLink
 {
 private:
-    char key_bytes[16];
-    char iv_bytes[16];
+    unsigned char key_bytes[16];
+    unsigned char iv_bytes[16];
     bool isAlive;
     bool encryptionActive;
 
@@ -25,13 +27,17 @@ private:
     sql::Driver *m_driver;
     sql::Connection *m_connection;
 
+    DeviceThread* m_descriptor;
+
     int decode(char* str,unsigned char* dest);
 
-    //TODO set up the encryption/decryption functions
-public:
-    DeviceLink(int socket,sockaddr_in* addr,socklen_t& size); 
-    void run();   
     int handleMessage(char* data,int length);
+    
+public:
+    DeviceLink(int socket,sockaddr_in* addr,socklen_t& size,DeviceThread* thread); 
+    void run();   
+    
+    void sendmessage(char* raw);
 };
 
 struct DeviceThread

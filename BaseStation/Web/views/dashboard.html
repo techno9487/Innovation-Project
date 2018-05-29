@@ -1,3 +1,23 @@
 {{define "content"}}
-
+    <div class="container">
+        <script>
+            function toggleDevice(id)
+            {
+                $.post("/device",{
+                    device_id:id,
+                })
+            }
+        </script>
+        <h1>Hello {{.firstname}}</h1>
+        <div>
+            <ul>
+                {{range .devices}}
+                    <li>
+                        <p>{{.DeviceName}} [{{.Id}}]</p> 
+                        <button class='btn-info' onclick="toggleDevice({{.Id}})">Toggle</button>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+    </div>
 {{end}}

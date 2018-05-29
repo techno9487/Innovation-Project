@@ -21,6 +21,11 @@ func main() {
 	initDB()
 	defer globalDB.Close()
 
+	err := initIPC()
+	if err != nil {
+		log.Fatal("unable to connect to IPC:", err)
+	}
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", homeHandler)
@@ -33,6 +38,8 @@ func main() {
 	router.Handle("/passwordChange", passwordChain).Methods("GET")
 	passwordChainBackend := alice.New(fetchSessionMiddleware, checkAuthenticityMiddleware).ThenFunc(handlePasswordChangeBackend)
 	router.Handle("/passwordChange", passwordChainBackend).Methods("POST")
+
+	router.HandleFunc("/device", handleDeviceRequest)
 
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))

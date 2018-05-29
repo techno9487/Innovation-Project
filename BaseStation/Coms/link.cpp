@@ -5,14 +5,17 @@
 #include "json.hh"
 #include <cppconn/prepared_statement.h>
 #include <openssl/bio.h>
+#include "crypto.h"
 
 using json = nlohmann::json;
 
-DeviceLink::DeviceLink(int socket,sockaddr_in* addr,socklen_t& size)
+DeviceLink::DeviceLink(int socket,sockaddr_in* addr,socklen_t& size,DeviceThread* thread)
 {
     this->isAlive = true;
     this->socket = socket;
     memcpy(&this->connectionInfo,addr,size);
+
+    this->m_descriptor = thread;
 }
 
 void DeviceLink::run()
@@ -116,12 +119,16 @@ int DeviceLink::handleMessage(char* data, int length)
             if(result == nullptr)
             {
                 std::cout << "Unable to retrive device with ID: " << device_id << std::endl;
+                //TODO: send error message that device can't be found
                 delete stmt;
                 return 0;
             }
 
+            this->m_descriptor->iDeviceID = device_id;
+
             if(!result->next())
             {
+                std::cout << "Unexpected error" << std::endl;
                 delete result;
                 delete stmt;
                 return 0;
@@ -135,6 +142,15 @@ int DeviceLink::handleMessage(char* data, int length)
 
             decode((char*)key.c_str(),(unsigned char*)this->key_bytes);
             decode((char*)iv.c_str(),(unsigned char*)this->iv_bytes);
+
+            json ack;
+            ack["type"] = "ack";
+            ack["success"] = true;
+
+            std::string resp = ack.dump();
+            sendmessage((char*)resp.c_str());
+
+            this->encryptionActive = true;
         }
     }catch(nlohmann::detail::parse_error e)
     {
@@ -151,8 +167,27 @@ int DeviceLink::decode(char* str,unsigned char* dest)
     BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
     int length = BIO_read(bio,dest,strlen(str));
-    std::cout << length << std::endl;
+    //std::cout << length << std::endl;
 
     BIO_free_all(bio);
     return 0;
+}
+
+void DeviceLink::sendmessage(char* raw)
+{
+    if(this->encryptionActive)
+    {
+        char* buffer = encrypt(raw,this->key_bytes,this->iv_bytes);
+        if(buffer == nullptr)
+        {
+            return;
+        }
+
+        write(this->socket,buffer,strlen(buffer));
+        delete buffer;
+    }else{
+        write(this->socket,raw,strlen(raw));
+    }
+
+    write(this->socket,"\n",1);
 }

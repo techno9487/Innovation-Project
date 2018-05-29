@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 
@@ -62,6 +63,8 @@ func checkAuthenticityMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		log.Println("User authenticated")
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -74,8 +77,13 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	row := globalDB.QueryRow("select Id,Password from User where email = ?", email)
 	var password string
 	var Id int
+
 	err := row.Scan(&Id, &password)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Redirect(w, r, "/login", 301)
+			return
+		}
 		log.Println("Login scan err:", err)
 		w.Write([]byte("Database error"))
 		return
@@ -165,12 +173,12 @@ func handlePasswordChangeBackend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := globalDB.Exec("update User set Password = ? where Id = ?", data, sesh.storage["uid"])
+	_, err = globalDB.Exec("update User set Password = ?,UserMetadata = '' where Id = ?", data, sesh.storage["uid"])
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	log.Println(result.RowsAffected())
+	//log.Println(result.RowsAffected())
 
 	http.Redirect(w, r, "/dashboard", 301)
 }
